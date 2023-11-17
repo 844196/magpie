@@ -1,0 +1,51 @@
+version: '3'
+
+vars:
+  VERSION:
+    sh: jq -r '.version' package.json
+  COMMIT_HASH:
+    sh: git rev-parse --short HEAD
+
+tasks:
+  docker:build:
+    vars:
+      TAGS: '{{default "latest" .TAGS}}'
+    cmd: |
+      docker build . \
+        --label 'org.opencontainers.image.source=https://github.com/844196/magpie' \
+        --label 'org.opencontainers.image.licenses=ISC' \
+        {{range $tag := splitList "," (default "" .TAGS)}}{{if $tag}}--tag ghcr.io/844196/magpie:{{$tag}}{{end}} {{end}}
+
+  docker:push:
+    vars:
+      TAGS: 'latest,{{.VERSION}},{{.COMMIT_HASH}}'
+    preconditions:
+      - git diff --quiet --exit-code && git diff --quiet --exit-code --cached
+    cmds:
+      - task: docker:build
+        vars:
+          TAGS: '{{.TAGS}}'
+      - for:
+          var: TAGS
+          split: ','
+          as: TAG
+        cmd: docker push ghcr.io/844196/magpie:{{.TAG}}
+
+  lint:
+    deps:
+      - lint:type
+      - lint:format
+      - lint:rule
+
+  lint:type:
+    cmd: npx tsc --noEmit
+
+  lint:format:
+    cmd: npx prettier --check .
+
+  lint:rule:
+    cmd: npx eslint .
+
+  clean:
+    cmd: find .generated -mindepth 1 -not -name .gitignore -delete
+    ignore_error: true

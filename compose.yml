@@ -1,0 +1,14 @@
+services:
+  workspace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    volumes:
+      - .:/workspace
+      - node_modules:/workspace/node_modules
+    init: true
+    tty: true # for devcontainer
+
+volumes:
+  node_modules:

@@ -1,0 +1,33 @@
+{
+  "name": "${localWorkspaceFolderBasename}",
+  "dockerComposeFile": ["../compose.yml"],
+  "service": "workspace",
+  "remoteUser": "node",
+  "updateRemoteUserUID": true,
+  "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "node",
+      "installOhMyZsh": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "shadowtime2000.eta-vscode"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        }
+      }
+    }
+  }
+}

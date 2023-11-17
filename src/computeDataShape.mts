@@ -1,0 +1,41 @@
+import { type OpenAPIV3 } from 'openapi-types'
+import { P, match } from 'ts-pattern'
+import { type Dereferenced } from './types.mjs'
+
+export function computeDataShape(
+  schema: Dereferenced<OpenAPIV3.SchemaObject>,
+  { name = '', nullable = false }: { name?: string | undefined; nullable?: boolean | undefined } = {},
+): string {
+  if (schema.type === 'array') {
+    return (
+      (name.length > 0 ? `${name}${nullable ? '?' : ''}:` : '') +
+      computeDataShape(schema.items, { name: '', nullable }) +
+      '[]'
+    )
+  }
+
+  if (schema.type === 'object') {
+    return (
+      (name.length > 0 ? `${name}${nullable ? '?' : ''}:array{` : 'array{') +
+      Object.entries(schema.properties ?? {})
+        .map(([childName, childSchema]) =>
+          computeDataShape(childSchema, {
+            name: childName,
+            nullable: (schema.required ?? []).includes(childName) === false,
+          }),
+        )
+        .join(',') +
+      '}'
+    )
+  }
+
+  const type = match(schema)
+    .with({ enum: P.array(P.any).select() }, (values) => values.map((x) => JSON.stringify(x)).join('|'))
+    .with({ type: 'string' }, () => 'string')
+    .with({ type: 'integer' }, () => 'int')
+    .with({ type: 'number' }, () => 'float')
+    .with({ type: 'boolean' }, () => 'bool')
+    .otherwise(() => 'mixed')
+
+  return (name.length > 0 ? `${name}${nullable ? '?' : ''}:` : '') + type
+}

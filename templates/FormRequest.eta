@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace <%= it.namespace %>;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+/**
+ * <%= it.docSummary %><%= '\n' %>
+<% if (it.docTags.length > 0) { %>
+ *
+<% it.docTags.forEach(([tag, ...rest]) => { %>
+ * @<%= tag %> <%= rest.join(' ').trim() %><%= '\n' %>
+<% }) %>
+<% } %>
+ */
+class <%= it.className %> extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules()
+    {
+        return [
+<% it.rules.forEach((p) => { %>
+<% if (p.rule.length > 0) { %>
+            '<%= p.name %>' => <%~ p.rule %>,
+<% } %>
+<% }) %>
+        ];
+    }
+
+<% if (it.authUsers.length > 0) { %>
+    /**
+     * @return <%= it.authUsers.join('|') %><%= '\n' %>
+     */
+    public function authUser()
+    {
+        return $this->user();
+    }
+
+<% } %>
+    /**
+     * @return <%~ it.dataShape %><%= '\n' %>
+     */
+    public function validatedData()
+    {
+        return $this->validated();
+    }
+}
