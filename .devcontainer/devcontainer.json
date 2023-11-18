@@ -4,12 +4,16 @@
   "service": "workspace",
   "remoteUser": "node",
   "updateRemoteUserUID": true,
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
   "workspaceFolder": "/workspace",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "username": "node",
       "installOhMyZsh": false
-    }
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "customizations": {
     "vscode": {
