@@ -47,7 +47,7 @@ class <%= it.className %> extends FormRequest
     /**
      * @return <%= it.authUsers.join('|') %><%= '\n' %>
      */
-    public function authUser()
+    public function authenticated()
     {
         return $this->user();
     }
