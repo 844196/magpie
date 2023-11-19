@@ -57,6 +57,22 @@ export function hasRouteModelBindingExtension<T extends OpenAPIV3.ParameterObjec
   return true
 }
 
+export type FormRequestNameExtension = string
+
+export function hasFormRequestNameExtension<T extends OpenAPIV3.OperationObject>(
+  x: T,
+): x is T & { 'x-magpie-laravel-form-request-name': FormRequestNameExtension } {
+  if (!('x-magpie-laravel-form-request-name' in x)) {
+    return false
+  }
+
+  if (typeof x['x-magpie-laravel-form-request-name'] !== 'string') {
+    return false
+  }
+
+  return true
+}
+
 export type Dereferenced<T> = T extends OpenAPIV3.ReferenceObject
   ? Exclude<T, OpenAPIV3.ReferenceObject>
   : T extends (infer U)[]

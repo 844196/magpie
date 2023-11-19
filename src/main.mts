@@ -8,7 +8,13 @@ import { P, match } from 'ts-pattern'
 import { combineSchema } from './combineSchema.mjs'
 import { computeDataShape } from './computeDataShape.mjs'
 import { computeRule } from './computeRule.mjs'
-import { hasAuthExtension, hasRouteModelBindingExtension, type Dereferenced, type PHPDocTag } from './types.mjs'
+import {
+  hasAuthExtension,
+  hasRouteModelBindingExtension,
+  type Dereferenced,
+  type PHPDocTag,
+  hasFormRequestNameExtension,
+} from './types.mjs'
 
 export async function main(output: string, namespace: string, doc: Dereferenced<OpenAPIV3.Document>, eta: Eta) {
   const waitings = []
@@ -18,14 +24,25 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
     }
 
     for (const [method, operation] of Object.entries(pathItem)) {
-      if (typeof operation !== 'object' || !('operationId' in operation)) {
+      if (typeof operation === 'string' || Array.isArray(operation)) {
         continue
       }
 
-      const className = `${operation.operationId
-        .replaceAll('-', '')
-        .replaceAll(' ', '')
-        .replace(/^[a-z]/, (c) => c.toUpperCase())}Request`
+      let className
+      if (hasFormRequestNameExtension(operation)) {
+        className = operation['x-magpie-laravel-form-request-name']
+      } else if ('operationId' in operation) {
+        className = `${operation.operationId
+          .replaceAll('-', '')
+          .replaceAll(' ', '')
+          .replace(/^[a-z]/, (c) => c.toUpperCase())}Request`
+      } else {
+        className = `${method.replace(/^[a-z]/, (c) => c.toUpperCase())}${apiPath
+          .split(/[-/_]/)
+          .filter((v) => v.length > 0)
+          .map((v) => v.replace(/^[a-z]/, (c) => c.toUpperCase()))
+          .join('')}Request`
+      }
 
       const docSummary = `${method.toUpperCase()} ${apiPath} - ${operation.summary}`
 
