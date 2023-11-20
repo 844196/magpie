@@ -30,7 +30,11 @@ export function computeDataShape(
   }
 
   const type = match(schema)
-    .with({ enum: P.array(P.any).select() }, (values) => values.map((x) => JSON.stringify(x)).join('|'))
+    .with(
+      { type: P.union('string', 'number').select('type'), enum: P.array(P.any).select('enumValues') },
+      ({ type, enumValues }) =>
+        `${type === 'number' ? 'int' : 'string'}&(${enumValues.map((x) => JSON.stringify(x)).join('|')})`,
+    )
     .with({ type: 'string' }, () => 'string')
     .with({ type: 'integer' }, () => 'int')
     .with({ type: 'number' }, () => 'float')
