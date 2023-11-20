@@ -31,8 +31,7 @@ tasks:
       - git diff --quiet --exit-code && git diff --quiet --exit-code --cached
     cmds:
       - 'npm version {{.RELEASE_TYPE}} -m ":bookmark: v%s"'
-      - git push origin main
-      - git push origin v{{.VERSION}}
+      - git push origin main --follow-tags
 
   release:image:
     vars:
