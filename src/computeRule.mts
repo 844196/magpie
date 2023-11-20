@@ -2,12 +2,21 @@ import { type OpenAPIV3 } from 'openapi-types'
 import { P, match } from 'ts-pattern'
 import { hasValidationRuleExtension, type Dereferenced, type FormRequestValidationDefinition } from './types.mjs'
 
-function computeNecessary(required: boolean, opts: { minLength?: number } = {}) {
-  return match({ required, ...opts })
-    .with({ required: true, minLength: 0 }, () => ['present'])
-    .with({ required: true, minLength: P.number.positive() }, () => ['required'])
-    .with({ required: false, minLength: 0 }, () => ['sometimes'])
-    .with({ required: false, minLength: P.number.positive() }, () => ['sometimes', 'required'])
+function computeNecessary(opts: {
+  type: Required<OpenAPIV3.SchemaObject>['type']
+  required: boolean
+  minLength?: number
+  minItems?: number
+}) {
+  return match({ minLength: 0, minItems: 0, ...opts })
+    .with({ type: 'string', required: true, minLength: 0 }, () => ['present'])
+    .with({ type: 'string', required: true, minLength: P.number.positive() }, () => ['required'])
+    .with({ type: 'string', required: false, minLength: 0 }, () => ['sometimes'])
+    .with({ type: 'string', required: false, minLength: P.number.positive() }, () => ['filled'])
+    .with({ type: 'array', required: true, minItems: 0 }, () => ['present'])
+    .with({ type: 'array', required: true, minItems: P.number.positive() }, () => ['required'])
+    .with({ type: 'array', required: false, minItems: 0 }, () => ['sometimes'])
+    .with({ type: 'array', required: false, minItems: P.number.positive() }, () => ['filled'])
     .with({ required: true }, () => ['required'])
     .with({ required: false }, () => ['sometimes'])
     .otherwise(() => [])
@@ -21,12 +30,38 @@ export function computeRule(
   }: { name?: string | undefined; required?: boolean | undefined; present?: boolean | undefined } = {},
 ): FormRequestValidationDefinition[] {
   if (hasValidationRuleExtension(schema)) {
-    return [{ name, rule: [...computeNecessary(required), ...schema['x-magpie-laravel-validation-rule']] }]
+    return [
+      {
+        name,
+        rule: [
+          ...computeNecessary({
+            type: schema.type ?? 'object',
+            required,
+            minLength: schema.minLength ?? 0,
+            minItems: schema.minItems ?? 0,
+          }),
+          ...schema['x-magpie-laravel-validation-rule'],
+        ],
+      },
+    ]
   }
 
   if (schema.type === 'array') {
     return [
-      { name, rule: [...computeNecessary(required), 'array'] },
+      {
+        name,
+        rule: [
+          ...computeNecessary({ type: 'array', required, minItems: schema.minItems ?? 0 }),
+          'array',
+          ...match({ minItems: schema.minItems ?? 0, maxItems: schema.maxItems })
+            .with({ minItems: P.number.positive(), maxItems: P.number.positive() }, ({ minItems, maxItems }) => [
+              `between:${minItems},${maxItems}`,
+            ])
+            .with({ minItems: 0, maxItems: P.number.positive() }, ({ maxItems }) => [`max:${maxItems}`])
+            .with({ minItems: P.number.positive() }, ({ minItems }) => [`min:${minItems}`])
+            .otherwise(() => []),
+        ],
+      },
       ...computeRule(schema.items, { name: `${name}.*` }),
     ]
   }
@@ -50,9 +85,9 @@ export function computeRule(
         pattern: P.string.select('pattern'),
       },
       ({ minLength, maxLength, pattern }) => [
-        ...computeNecessary(required, { minLength }),
+        ...computeNecessary({ type: 'string', required, minLength }),
         'string',
-        ['between', minLength, maxLength],
+        `between:${minLength},${maxLength}`,
         ['regex', `/${pattern}/`],
       ],
     )
@@ -63,9 +98,9 @@ export function computeRule(
         pattern: P.string.select('pattern'),
       },
       ({ minLength, pattern }) => [
-        ...computeNecessary(required, { minLength }),
+        ...computeNecessary({ type: 'string', required, minLength }),
         'string',
-        ['min', minLength],
+        `min:${minLength}`,
         ['regex', `/${pattern}/`],
       ],
     )
@@ -76,9 +111,9 @@ export function computeRule(
         pattern: P.string.select('pattern'),
       },
       ({ maxLength, pattern }) => [
-        ...computeNecessary(required),
+        ...computeNecessary({ type: 'string', required }),
         'string',
-        ['max', maxLength],
+        `max:${maxLength}`,
         ['regex', `/${pattern}/`],
       ],
     )
@@ -87,7 +122,7 @@ export function computeRule(
         type: 'string',
         pattern: P.string.select('pattern'),
       },
-      ({ pattern }) => [...computeNecessary(required), 'string', ['regex', `/${pattern}/`]],
+      ({ pattern }) => [...computeNecessary({ type: 'string', required }), 'string', ['regex', `/${pattern}/`]],
     )
     .with(
       {
@@ -96,9 +131,9 @@ export function computeRule(
         maxLength: P.number.select('maxLength'),
       },
       ({ minLength, maxLength }) => [
-        ...computeNecessary(required, { minLength }),
+        ...computeNecessary({ type: 'string', required, minLength }),
         'string',
-        ['between', minLength, maxLength],
+        `between:${minLength},${maxLength}`,
       ],
     )
     .with(
@@ -106,14 +141,14 @@ export function computeRule(
         type: 'string',
         minLength: P.number.select('minLength'),
       },
-      ({ minLength }) => [...computeNecessary(required, { minLength }), 'string', ['min', minLength]],
+      ({ minLength }) => [...computeNecessary({ type: 'string', required, minLength }), 'string', `min:${minLength}`],
     )
     .with(
       {
         type: 'string',
         maxLength: P.number.select('maxLength'),
       },
-      ({ maxLength }) => [...computeNecessary(required), 'string', ['max', maxLength]],
+      ({ maxLength }) => [...computeNecessary({ type: 'string', required }), 'string', `max:${maxLength}`],
     )
     .with(
       {
@@ -121,7 +156,7 @@ export function computeRule(
         enum: P.array(P.string),
       },
       ({ enum: values }) => [
-        ...computeNecessary(required),
+        ...computeNecessary({ type: 'string', required }),
         'string',
         { raw: `\\Illuminate\\Validation\\Rule::in(${JSON.stringify(values)})` },
       ],
@@ -131,20 +166,20 @@ export function computeRule(
         type: 'string',
         format: 'email',
       },
-      () => [...computeNecessary(required), 'string', 'email'],
+      () => [...computeNecessary({ type: 'string', required }), 'string', 'email'],
     )
     .with(
       {
         type: 'string',
         format: 'date-time',
       },
-      () => [...computeNecessary(required), 'string', 'date-format'],
+      () => [...computeNecessary({ type: 'string', required }), 'string', 'date-format'],
     )
     .with(
       {
         type: 'string',
       },
-      () => [...computeNecessary(required), 'string'],
+      () => [...computeNecessary({ type: 'string', required }), 'string'],
     )
 
     // integer
@@ -154,21 +189,25 @@ export function computeRule(
         minimum: P.number.select('minimum'),
         maximum: P.number.select('maximum'),
       },
-      ({ minimum, maximum }) => [...computeNecessary(required), 'integer', ['between', minimum, maximum]],
+      ({ minimum, maximum }) => [
+        ...computeNecessary({ type: 'integer', required }),
+        'integer',
+        `between:${minimum},${maximum}`,
+      ],
     )
     .with(
       {
         type: 'integer',
         minimum: P.number.select('minimum'),
       },
-      ({ minimum }) => [...computeNecessary(required), 'integer', ['min', minimum]],
+      ({ minimum }) => [...computeNecessary({ type: 'integer', required }), 'integer', `min:${minimum}`],
     )
     .with(
       {
         type: 'integer',
         maximum: P.number.select('maximum'),
       },
-      ({ maximum }) => [...computeNecessary(required), 'integer', ['max', maximum]],
+      ({ maximum }) => [...computeNecessary({ type: 'integer', required }), 'integer', `max:${maximum}`],
     )
     .with(
       {
@@ -176,7 +215,7 @@ export function computeRule(
         enum: P.array(P.string),
       },
       ({ enum: values }) => [
-        ...computeNecessary(required),
+        ...computeNecessary({ type: 'integer', required }),
         'integer',
         { raw: `\\Illuminate\\Validation\\Rule::in(${JSON.stringify(values)})` },
       ],
@@ -185,7 +224,7 @@ export function computeRule(
       {
         type: 'integer',
       },
-      () => [...computeNecessary(required), 'integer'],
+      () => [...computeNecessary({ type: 'integer', required }), 'integer'],
     )
 
     // number
@@ -195,21 +234,25 @@ export function computeRule(
         minimum: P.number.select('minimum'),
         maximum: P.number.select('maximum'),
       },
-      ({ minimum, maximum }) => [...computeNecessary(required), 'numeric', ['between', minimum, maximum]],
+      ({ minimum, maximum }) => [
+        ...computeNecessary({ type: 'number', required }),
+        'numeric',
+        `between:${minimum},${maximum}`,
+      ],
     )
     .with(
       {
         type: 'number',
         minimum: P.number.select('minimum'),
       },
-      ({ minimum }) => [...computeNecessary(required), 'numeric', ['min', minimum]],
+      ({ minimum }) => [...computeNecessary({ type: 'number', required }), 'numeric', `min:${minimum}`],
     )
     .with(
       {
         type: 'number',
         maximum: P.number.select('maximum'),
       },
-      ({ maximum }) => [...computeNecessary(required), 'numeric', ['max', maximum]],
+      ({ maximum }) => [...computeNecessary({ type: 'number', required }), 'numeric', `max:${maximum}`],
     )
     .with(
       {
@@ -217,7 +260,7 @@ export function computeRule(
         enum: P.array(P.string),
       },
       ({ enum: values }) => [
-        ...computeNecessary(required),
+        ...computeNecessary({ type: 'number', required }),
         'numeric',
         { raw: `\\Illuminate\\Validation\\Rule::in(${JSON.stringify(values)})` },
       ],
@@ -226,7 +269,7 @@ export function computeRule(
       {
         type: 'number',
       },
-      () => [...computeNecessary(required), 'numeric'],
+      () => [...computeNecessary({ type: 'number', required }), 'numeric'],
     )
 
     // boolean
@@ -234,7 +277,7 @@ export function computeRule(
       {
         type: 'boolean',
       },
-      () => [...computeNecessary(required), 'boolean'],
+      () => [...computeNecessary({ type: 'boolean', required }), 'boolean'],
     )
     .otherwise(() => [])
 
