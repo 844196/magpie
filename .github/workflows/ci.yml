@@ -13,7 +13,7 @@ on:
 
 permissions:
   contents: read
-  actions: write # for delete actions cache
+  actions: write # For delete actions cache
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,20 +28,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download Cache
-        if: ${{ github.event_name == 'pull_request' }}
         id: cache
         uses: actions/cache/restore@v3
         with:
           path: /tmp/image-cache
-          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.base_ref }}
+          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.event_name == 'push' && github.ref_name || github.base_ref }}
           restore-keys: |
-            ${{ runner.os }}-magpie-workspace-cache-${{ github.base_ref }}
             ${{ runner.os }}-magpie-workspace-cache-main
             ${{ runner.os }}-magpie-workspace-cache-
             ${{ runner.os }}-
 
       - name: Restore cache
-        if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.cache.outputs.cache-hit }}
         run: |
           docker load --input /tmp/image-cache/magpie_workspace.tar
 
@@ -50,7 +48,7 @@ jobs:
           echo "HOST_UID=$(id -u)" >> .env
           echo "HOST_GID=$(id -g)" >> .env
 
-      - name: Lint
+      - name: Run test
         uses: devcontainers/ci@v0.3
         with:
           imageName: magpie_workspace
@@ -59,7 +57,8 @@ jobs:
           push: never
           runCmd: |
             set -euo pipefail
-            task setup lint
+            task setup
+            task lint
 
       - name: Store cache
         if: ${{ github.event_name == 'push' }}
@@ -68,7 +67,7 @@ jobs:
           docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:latest
 
       - name: Delete previous cache
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && steps.cache.outputs.cache-hit }}
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
