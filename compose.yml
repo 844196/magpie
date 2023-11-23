@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: base
+      target: workspace
     volumes:
       - ${LOCAL_WORKSPACE_FOLDER:-.}:/workspace
       - node_modules:/workspace/node_modules

@@ -51,10 +51,7 @@ tasks:
     vars:
       TAGS: '{{default "latest" .TAGS}}'
     cmd: |
-      docker build . \
-        --label 'org.opencontainers.image.source=https://github.com/844196/magpie' \
-        --label 'org.opencontainers.image.licenses=ISC' \
-        {{range $tag := splitList "," (default "" .TAGS)}}{{if $tag}}--tag ghcr.io/844196/magpie:{{$tag}}{{end}} {{end}}
+      docker build . {{range $tag := splitList "," (default "" .TAGS)}}{{if $tag}}--tag ghcr.io/844196/magpie:{{$tag}}{{end}} {{end}}
 
   lint:
     deps:
@@ -71,6 +68,5 @@ tasks:
   lint:rule:
     cmd: npx eslint .
 
-  clean:
-    cmd: find .generated -mindepth 1 -not -name .gitignore -delete
-    ignore_error: true
+  build:
+    cmd: npx tsc

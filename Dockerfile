@@ -1,8 +1,12 @@
 FROM node:20.9.0-bullseye as base
 
+FROM base as workspace
+
 RUN \
   install -o node -g node -d /workspace/ && \
   install -o node -g node -d /workspace/node_modules/
+
+RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin v3.31.0
 
 USER node
 WORKDIR /workspace
@@ -11,7 +15,19 @@ WORKDIR /workspace
 
 FROM base as builder
 
+WORKDIR /workspace
+
 COPY package.json package-lock.json ./
+
+RUN \
+  --mount=type=cache,target=/root/.npm \
+  npm ci
+
+COPY tsconfig.json ./tsconfig.json
+COPY src ./src
+COPY bin ./bin
+
+RUN npx tsc
 
 RUN \
   --mount=type=cache,target=/root/.npm \
@@ -21,18 +37,13 @@ RUN \
 
 FROM node:20.9.0-alpine as production
 
-COPY --chown=node:node --from=builder /workspace /magpie
-COPY --chown=node:node src /magpie/src
-COPY --chown=node:node bin /magpie/bin
+COPY --chown=node:node --from=builder /workspace/dist /magpie
+COPY --chown=node:node --from=builder /workspace/node_modules /magpie/node_modules
 COPY --chown=node:node templates /magpie/templates
-COPY --chown=node:node tsconfig.json /magpie/tsconfig.json
-
-RUN install -o node -g node -d /local
 
 USER node
 WORKDIR /local
 
-RUN npm config set update-notifier false
-
-ENTRYPOINT ["npm", "--prefix", "/magpie", "exec", "--", "tsx", "--tsconfig", "/magpie/tsconfig.json", "/magpie/bin/magpie.mts"]
+ENV NODE_ENV=production
+ENTRYPOINT ["node", "/magpie/bin/magpie.mjs"]
 CMD ["help"]
