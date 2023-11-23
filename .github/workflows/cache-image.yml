@@ -22,16 +22,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/image-cache
-          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.ref }}
+          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}
           restore-keys: |
-            ${{ runner.os }}-magpie-workspace-cache-${{ github.ref }}
+            ${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}
             ${{ runner.os }}-magpie-workspace-cache-
             ${{ runner.os }}-
 
       - name: Restore cache
         if: ${{ steps.cache.outputs.cache-hit == 'true' }}
         run: |
-          docker load --input /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.ref }}
+          docker load --input /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.ref_name }}
 
       - name: Setup environment variables
         run: |
@@ -42,9 +42,9 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           imageName: magpie_workspace
-          imageTag: ${{ github.ref }}
+          imageTag: ${{ github.ref_name }}
           push: never
 
       - name: Store cache
         run: |
-          docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.ref }}
+          docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.ref_name }}
