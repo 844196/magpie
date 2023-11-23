@@ -25,13 +25,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Cache
+        id: cache
+        uses: actions/cache/restore@v3
+        with:
+          path: /tmp/image-cache
+          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.base_ref }}
+          restore-keys: |
+            ${{ runner.os }}-magpie-workspace-cache-${{ github.base_ref }}
+            ${{ runner.os }}-magpie-workspace-cache-main
+            ${{ runner.os }}-magpie-workspace-cache-
+            ${{ runner.os }}-
+
+      - name: Restore cache
+        if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+        run: |
+          docker load --input /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.base_ref }}
+
       - name: Setup environment variables
         run: |
           echo "HOST_UID=$(id -u)" >> .env
           echo "HOST_GID=$(id -g)" >> .env
+
       - name: Lint
         uses: devcontainers/ci@v0.3
         with:
+          imageName: magpie_workspace
+          push: never
           runCmd: |
             set -euo pipefail
             task setup lint

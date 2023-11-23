@@ -25,6 +25,7 @@ jobs:
           key: ${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}
           restore-keys: |
             ${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}
+            ${{ runner.os }}-magpie-workspace-cache-main
             ${{ runner.os }}-magpie-workspace-cache-
             ${{ runner.os }}-
 
