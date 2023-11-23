@@ -66,7 +66,7 @@ jobs:
 
       - name: Upload cache
         if: ${{ github.event_name == 'push' }}
-        uses: actions/cache/store@v3
+        uses: actions/cache/save@v3
         with:
           path: /tmp/image-cache
           key: ${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}
