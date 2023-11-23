@@ -26,7 +26,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Cache
+      - name: Download Cache
+        if: ${{ github.event_name == 'pull_request' }}
         id: cache
         uses: actions/cache/restore@v3
         with:
@@ -41,7 +42,7 @@ jobs:
       - name: Restore cache
         if: ${{ steps.cache.outputs.cache-hit == 'true' }}
         run: |
-          docker load --input /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.base_ref }}
+          docker load --input /tmp/image-cache/magpie_workspace.tar
 
       - name: Setup environment variables
         run: |
@@ -56,3 +57,16 @@ jobs:
           runCmd: |
             set -euo pipefail
             task setup lint
+
+      - name: Store cache
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          mkdir -p /tmp/image-cache
+          docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.ref_name }}
+
+      - name: Upload cache
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/cache/store@v3
+        with:
+          path: /tmp/image-cache
+          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}
