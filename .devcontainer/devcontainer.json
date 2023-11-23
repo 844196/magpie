@@ -18,10 +18,9 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
         "dbaeumer.vscode-eslint",
-        "GitHub.copilot",
-        "GitHub.copilot-chat",
         "shadowtime2000.eta-vscode"
       ],
       "settings": {
