@@ -76,7 +76,7 @@ export function hasFormRequestNameExtension<T extends OpenAPIV3.OperationObject>
 export type Dereferenced<T> = T extends OpenAPIV3.ReferenceObject
   ? Exclude<T, OpenAPIV3.ReferenceObject>
   : T extends (infer U)[]
-  ? Dereferenced<U>[]
-  : T extends Function | Date | Error | RegExp // eslint-disable-line @typescript-eslint/ban-types
-  ? T
-  : { [key in keyof T]: Dereferenced<T[key]> }
+    ? Dereferenced<U>[]
+    : T extends Function | Date | Error | RegExp // eslint-disable-line @typescript-eslint/ban-types
+      ? T
+      : { [key in keyof T]: Dereferenced<T[key]> }

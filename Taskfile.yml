@@ -3,6 +3,10 @@
 version: '3'
 
 tasks:
+  setup:
+    run: once
+    cmd: npm ci
+
   release:patch:
     cmds:
       - task: release:tag

@@ -2,7 +2,12 @@ FROM node:20.9.0-bullseye as base
 
 FROM base as workspace
 
+ARG USER_UID
+ARG USER_GID
+
 RUN \
+  usermod --non-unique --uid ${USER_UID} node && \
+  groupmod --non-unique --gid ${USER_GID} node && \
   install -o node -g node -d /workspace/ && \
   install -o node -g node -d /workspace/node_modules/
 
