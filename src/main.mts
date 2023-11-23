@@ -76,6 +76,7 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
       await fs.mkdir(path.dirname(dest), { recursive: true })
 
       const rendered = eta.render('FormRequest', {
+        operation,
         namespace,
         className,
         docSummary,
