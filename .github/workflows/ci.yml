@@ -53,6 +53,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           imageName: magpie_workspace
+          cacheFrom: magpie_workspace:latest
           imageTag: latest
           push: never
           runCmd: |
