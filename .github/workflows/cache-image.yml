@@ -1,0 +1,50 @@
+name: Cache image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cache-image:
+    name: Cache image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Cache
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/image-cache
+          key: ${{ runner.os }}-magpie-workspace-cache-${{ github.ref }}
+          restore-keys: |
+            ${{ runner.os }}-magpie-workspace-cache-${{ github.ref }}
+            ${{ runner.os }}-magpie-workspace-cache-
+            ${{ runner.os }}-
+
+      - name: Restore cache
+        if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+        run: |
+          docker load --input /tmp/image-cache/magpie-workspace.tar magpie-workspace:${{ github.ref }}
+
+      - name: Setup environment variables
+        run: |
+          echo "HOST_UID=$(id -u)" >> .env
+          echo "HOST_GID=$(id -g)" >> .env
+
+      - name: Build image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: magpie-workspace
+          imageTag: ${{ github.ref }}
+          push: never
+
+      - name: Store cache
+        run: |
+          docker save --output /tmp/image-cache/magpie-workspace.tar magpie-workspace:${{ github.ref }}
