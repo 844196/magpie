@@ -1,9 +1,7 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import * as url from 'node:url'
 import { Eta } from 'eta'
 import { type OpenAPIV3 } from 'openapi-types'
-import * as prettier from 'prettier'
 import { P, match } from 'ts-pattern'
 import { combineSchema } from './combineSchema.mjs'
 import { computeDataShape } from './computeDataShape.mjs'
@@ -86,19 +84,7 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
         rules,
         dataShape,
       })
-      const formatted = await prettier.format(rendered, {
-        // SEE: https://github.com/prettier/prettier/issues/15141
-        plugins: [
-          path.resolve(
-            path.dirname(url.fileURLToPath(import.meta.url)),
-            '../node_modules/@prettier/plugin-php/src/index.js',
-          ),
-        ],
-        parser: 'php',
-        printWidth: 120,
-        singleQuote: true,
-      })
-      waitings.push(fs.writeFile(dest, formatted))
+      waitings.push(fs.writeFile(dest, rendered))
     }
   }
   await Promise.all(waitings)
