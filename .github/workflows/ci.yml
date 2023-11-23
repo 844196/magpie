@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  actions: write # for delete actions cache
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -65,6 +66,15 @@ jobs:
         run: |
           mkdir -p /tmp/image-cache
           docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:latest
+
+      - name: Delete previous cache
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete --confirm "${{ runner.os }}-magpie-workspace-cache-${{ github.ref_name }}"
 
       - name: Upload cache
         if: ${{ github.event_name == 'push' }}
