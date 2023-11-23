@@ -53,6 +53,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           imageName: magpie_workspace
+          imageTag: latest
           push: never
           runCmd: |
             set -euo pipefail
@@ -62,7 +63,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         run: |
           mkdir -p /tmp/image-cache
-          docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:${{ github.ref_name }}
+          docker save --output /tmp/image-cache/magpie_workspace.tar magpie_workspace:latest
 
       - name: Upload cache
         if: ${{ github.event_name == 'push' }}
