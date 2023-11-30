@@ -88,7 +88,7 @@ export function computeRule(
         ...computeNecessary({ type: 'string', required, minLength }),
         'string',
         `between:${minLength},${maxLength}`,
-        ['regex', `/${pattern}/`],
+        `regex:/${pattern}/`,
       ],
     )
     .with(
@@ -101,7 +101,7 @@ export function computeRule(
         ...computeNecessary({ type: 'string', required, minLength }),
         'string',
         `min:${minLength}`,
-        ['regex', `/${pattern}/`],
+        `regex:/${pattern}/`,
       ],
     )
     .with(
@@ -114,7 +114,7 @@ export function computeRule(
         ...computeNecessary({ type: 'string', required }),
         'string',
         `max:${maxLength}`,
-        ['regex', `/${pattern}/`],
+        `regex:/${pattern}/`,
       ],
     )
     .with(
@@ -122,7 +122,7 @@ export function computeRule(
         type: 'string',
         pattern: P.string.select('pattern'),
       },
-      ({ pattern }) => [...computeNecessary({ type: 'string', required }), 'string', ['regex', `/${pattern}/`]],
+      ({ pattern }) => [...computeNecessary({ type: 'string', required }), 'string', `regex:/${pattern}/`],
     )
     .with(
       {
