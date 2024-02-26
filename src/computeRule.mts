@@ -62,7 +62,7 @@ export function computeRule(
             .otherwise(() => []),
         ],
       },
-      ...computeRule(schema.items, { name: `${name}.*` }),
+      ...computeRule(schema.items, { name: `${name}.*`, required: true }),
     ]
   }
 
