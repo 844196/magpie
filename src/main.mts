@@ -57,18 +57,20 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
 
       const rootSchema = combineSchema(operation)
 
-      const rules = computeRule(rootSchema).map(({ name, rule }) => {
-        return {
-          name,
-          rule: `[${rule
-            .map((r) =>
-              match(r)
-                .with({ raw: P.string }, ({ raw }) => raw)
-                .otherwise((v) => JSON.stringify(v)),
-            )
-            .join(',')}]`,
-        }
-      })
+      const rules = computeRule(rootSchema, { required: operation.requestBody?.required ?? false }).map(
+        ({ name, rule }) => {
+          return {
+            name,
+            rule: `[${rule
+              .map((r) =>
+                match(r)
+                  .with({ raw: P.string }, ({ raw }) => raw)
+                  .otherwise((v) => JSON.stringify(v)),
+              )
+              .join(',')}]`,
+          }
+        },
+      )
 
       const dataShape = computeDataShape(rootSchema)
 
