@@ -70,7 +70,7 @@ export function computeRule(
     return Object.entries(schema.properties ?? {}).flatMap(([childName, childSchema]) =>
       computeRule(childSchema, {
         name: name.length > 0 ? `${name}.${childName}` : childName,
-        required: (schema.required ?? []).includes(childName),
+        required: required && (schema.required ?? []).includes(childName),
       }),
     )
   }
