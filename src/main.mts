@@ -1,20 +1,21 @@
-import * as fs from 'node:fs/promises'
-import * as path from 'node:path'
+import * as path from 'std/path'
 import { Eta } from 'eta'
 import { type OpenAPIV3 } from 'openapi-types'
-import { P, match } from 'ts-pattern'
-import { combineSchema } from './combineSchema.mjs'
-import { computeDataShape } from './computeDataShape.mjs'
-import { computeRule } from './computeRule.mjs'
+import { match, P } from 'ts-pattern'
+import { combineSchema } from './combineSchema.mts'
+import { computeDataShape } from './computeDataShape.mts'
+import { computeRule } from './computeRule.mts'
 import {
-  hasAuthExtension,
-  hasRouteModelBindingExtension,
   type Dereferenced,
-  type PHPDocTag,
+  hasAuthExtension,
   hasFormRequestNameExtension,
-} from './types.mjs'
+  hasRouteModelBindingExtension,
+  type PHPDocTag,
+} from './types.mts'
 
-export async function main(output: string, namespace: string, doc: Dereferenced<OpenAPIV3.Document>, eta: Eta) {
+const eta = new Eta()
+
+export async function main(output: string, namespace: string, doc: Dereferenced<OpenAPIV3.Document>, template: string) {
   const waitings = []
   for (const [apiPath, pathItem] of Object.entries(doc.paths)) {
     if (!pathItem) {
@@ -29,17 +30,21 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
       let className
       if (hasFormRequestNameExtension(operation)) {
         className = operation['x-magpie-laravel-form-request-name']
-      } else if ('operationId' in operation) {
-        className = `${operation.operationId
-          .replaceAll('-', '')
-          .replaceAll(' ', '')
-          .replace(/^[a-z]/, (c) => c.toUpperCase())}Request`
+      } else if ('operationId' in operation && typeof operation.operationId === 'string') {
+        className = `${
+          operation.operationId
+            .replaceAll('-', '')
+            .replaceAll(' ', '')
+            .replace(/^[a-z]/, (c) => c.toUpperCase())
+        }Request`
       } else {
-        className = `${method.replace(/^[a-z]/, (c) => c.toUpperCase())}${apiPath
-          .split(/[-/_]/)
-          .filter((v) => v.length > 0)
-          .map((v) => v.replace(/^[a-z]/, (c) => c.toUpperCase()))
-          .join('')}Request`
+        className = `${method.replace(/^[a-z]/, (c) => c.toUpperCase())}${
+          apiPath
+            .split(/[-/_]/)
+            .filter((v) => v.length > 0)
+            .map((v) => v.replace(/^[a-z]/, (c) => c.toUpperCase()))
+            .join('')
+        }Request`
       }
 
       const docSummary = `${method.toUpperCase()} ${apiPath} - ${operation.summary}`
@@ -61,23 +66,22 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
         ({ name, rule }) => {
           return {
             name,
-            rule: `[${rule
-              .map((r) =>
-                match(r)
-                  .with({ raw: P.string }, ({ raw }) => raw)
-                  .otherwise((v) => JSON.stringify(v)),
-              )
-              .join(',')}]`,
+            rule: `[${
+              rule
+                .map((r) =>
+                  match(r)
+                    .with({ raw: P.string }, ({ raw }) => raw)
+                    .otherwise((v) => JSON.stringify(v))
+                )
+                .join(',')
+            }]`,
           }
         },
       )
 
       const dataShape = computeDataShape(rootSchema)
 
-      const dest = path.join(output, `${className}.php`)
-      await fs.mkdir(path.dirname(dest), { recursive: true })
-
-      const rendered = eta.render('FormRequest', {
+      const rendered = eta.renderString(template, {
         method,
         path: apiPath,
         operation,
@@ -89,7 +93,7 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
         rules,
         dataShape,
       })
-      waitings.push(fs.writeFile(dest, rendered))
+      waitings.push(Deno.writeTextFile(path.join(output, `${className}.php`), rendered))
     }
   }
   await Promise.all(waitings)

@@ -1,6 +1,6 @@
 import { type OpenAPIV3 } from 'openapi-types'
-import { P, match } from 'ts-pattern'
-import { hasValidationRuleExtension, type Dereferenced, type FormRequestValidationDefinition } from './types.mjs'
+import { match, P } from 'ts-pattern'
+import { type Dereferenced, type FormRequestValidationDefinition, hasValidationRuleExtension } from './types.mts'
 
 function computeNecessary(opts: {
   type: Required<OpenAPIV3.SchemaObject>['type']
@@ -71,7 +71,7 @@ export function computeRule(
       computeRule(childSchema, {
         name: name.length > 0 ? `${name}.${childName}` : childName,
         required: required && (schema.required ?? []).includes(childName),
-      }),
+      })
     )
   }
 
@@ -181,7 +181,6 @@ export function computeRule(
       },
       () => [...computeNecessary({ type: 'string', required }), 'string'],
     )
-
     // integer
     .with(
       {
@@ -226,7 +225,6 @@ export function computeRule(
       },
       () => [...computeNecessary({ type: 'integer', required }), 'integer'],
     )
-
     // number
     .with(
       {
@@ -271,7 +269,6 @@ export function computeRule(
       },
       () => [...computeNecessary({ type: 'number', required }), 'numeric'],
     )
-
     // boolean
     .with(
       {

@@ -1,6 +1,6 @@
 import { type OpenAPIV3 } from 'openapi-types'
-import { P, match } from 'ts-pattern'
-import { hasRouteModelBindingExtension, type Dereferenced } from './types.mjs'
+import { match, P } from 'ts-pattern'
+import { type Dereferenced, hasRouteModelBindingExtension } from './types.mts'
 
 export function combineSchema({
   parameters = [],

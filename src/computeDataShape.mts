@@ -1,6 +1,6 @@
 import { type OpenAPIV3 } from 'openapi-types'
-import { P, match } from 'ts-pattern'
-import { type Dereferenced } from './types.mjs'
+import { match, P } from 'ts-pattern'
+import { type Dereferenced } from './types.mts'
 
 export function computeDataShape(
   schema: Dereferenced<OpenAPIV3.SchemaObject>,
@@ -22,7 +22,7 @@ export function computeDataShape(
           computeDataShape(childSchema, {
             name: childName,
             nullable: (schema.required ?? []).includes(childName) === false,
-          }),
+          })
         )
         .join(',') +
       '}'

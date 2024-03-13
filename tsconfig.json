@@ -1,8 +1,0 @@
-{
-  "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node20/tsconfig.json"],
-  "compilerOptions": {
-    "noErrorTruncation": true,
-    "outDir": "dist"
-  },
-  "include": ["src/**/*", "bin/**/*"]
-}
