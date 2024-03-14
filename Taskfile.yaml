@@ -11,7 +11,7 @@ tasks:
   build:
     cmds:
       - task: clean
-      - cmd: cat src/template.eta | jq --raw-input --slurp > src/template.json
+      - cmd: jq --raw-input --slurp < src/template.eta > src/template.json
       - cmd: deno compile -A --target {{.ITEM}} --output .build/magpie-{{.ITEM}} src/cli.mts
         for:
           - x86_64-unknown-linux-gnu
