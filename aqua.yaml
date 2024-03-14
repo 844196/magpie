@@ -1,0 +1,7 @@
+registries:
+  - type: standard
+    ref: v4.151.0 # renovate: depName=aquaproj/aqua-registry
+packages:
+  - name: go-task/task@v3.35.1
+  - name: jqlang/jq@jq-1.7.1
+  - name: denoland/deno@v1.41.2

@@ -1,0 +1,23 @@
+# spell-checker: disable
+---
+version: '3'
+
+tasks:
+  lint:
+    cmds:
+      - deno fmt --check
+      - deno lint
+
+  build:
+    cmds:
+      - task: clean
+      - cmd: cat src/template.eta | jq --raw-input --slurp > src/template.json
+      - cmd: deno compile -A --target {{.ITEM}} --output .build/magpie-{{.ITEM}} src/cli.mts
+        for:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-pc-windows-msvc
+
+  clean: rm -rf .build/*
