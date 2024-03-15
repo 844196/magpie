@@ -1,0 +1,20 @@
+#!/usr/bin/env -S deno run -A --ext ts
+
+import { format, increment, parse, ReleaseType } from 'std/semver'
+import { Command, EnumType } from 'cliffy/command'
+import current from '../version.json' with { type: 'json' }
+import $ from 'dax'
+
+const releaseType = new EnumType<ReleaseType>(['major', 'minor', 'patch'])
+
+await new Command()
+  .type('release-type', releaseType)
+  .arguments('<major|minor|patch:release-type>')
+  .action(async (_, to) => {
+    const incremented = format(increment(parse(current), to))
+
+    await Deno.writeTextFile('version.json', JSON.stringify(incremented))
+    await $`git add version.json`
+    await $`git commit -m ':bookmark: v${incremented}'`
+  })
+  .parse(Deno.args)
