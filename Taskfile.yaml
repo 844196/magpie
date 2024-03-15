@@ -12,12 +12,14 @@ tasks:
     cmds:
       - task: clean
       - cmd: jq --raw-input --slurp < src/template.eta > src/template.json
-      - cmd: deno compile -A --target {{.ITEM}} --output .build/magpie-{{.ITEM}} src/cli.mts
+      - cmd: deno compile --lock=deno.lock -A --target {{.ITEM}} --output .build/magpie-{{.ITEM}} src/cli.mts
         for:
           - x86_64-unknown-linux-gnu
           - aarch64-unknown-linux-gnu
           - x86_64-apple-darwin
           - aarch64-apple-darwin
           - x86_64-pc-windows-msvc
+
+  lock-write: deno cache --lock=deno.lock --lock-write src/cli.mts
 
   clean: rm -rf .build/*
