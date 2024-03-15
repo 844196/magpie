@@ -27,6 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: aquaproj/aqua-installer@v2.3.0
+        with:
+          aqua_version: v2.21.0
+
       - name: Compute release version
         run: echo "version=$(jq --raw-output . version.json)" >> "$GITHUB_OUTPUT"
         id: released_version
