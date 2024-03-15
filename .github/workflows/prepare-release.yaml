@@ -28,6 +28,10 @@ jobs:
           # SEE: https://yoshiori.hatenablog.com/entry/2021/12/08/220839
           ref: main
 
+      - uses: aquaproj/aqua-installer@v2.3.0
+        with:
+          aqua_version: v2.21.0
+
       - name: Setup git
         run: |
           git config --local user.name 'GitHub Actions'
