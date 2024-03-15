@@ -3,10 +3,12 @@ import { type OpenAPIV3 } from 'openapi-types'
 import { main } from './main.mts'
 import { type Dereferenced } from './types.mts'
 import { Command, CompletionsCommand } from 'cliffy/command'
+import VERSION from '../version.json' with { type: 'json' }
 import BUILTIN_TEMPLATE from './template.json' with { type: 'json' }
 
 await new Command()
   .name('magpie')
+  .version(VERSION)
   .command('form-request <OPENAPI_SPEC>')
   .description('Generate Laravel FormRequest from OpenAPI')
   .option('-n, --namespace <NAMESPACE>', 'Namespace for the generated code', { default: 'Generated\\Http\\Requests' })
