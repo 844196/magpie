@@ -1,0 +1,44 @@
+# cSpell:ignore softprops
+---
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+run-name: Release (${{ join(github.event.pull_request.labels.*.name, ', ') }})
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    if: >-
+      github.event.pull_request.merged == true && (
+        contains(github.event.pull_request.labels.*.name, 'release:patch') ||
+        contains(github.event.pull_request.labels.*.name, 'release:minor') ||
+        contains(github.event.pull_request.labels.*.name, 'release:major')
+      )
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute release version
+        run: echo "version=$(jq --raw-output . version.json)" >> "$GITHUB_OUTPUT"
+        id: released_version
+
+      - run: task build
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: v${{ steps.released_version.outputs.version }}
+          tag_name: v${{ steps.released_version.outputs.version }}
+          files: .build/*
+          generate_release_notes: true
+          # SEE: https://stackoverflow.com/questions/52200096/github-pull-request-waiting-for-status-to-be-reported/69169858#69169858
+          token: ${{ secrets.REPO_SCOPED_TOKEN }}

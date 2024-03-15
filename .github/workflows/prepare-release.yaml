@@ -1,0 +1,55 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        description: 'patch | minor | major'
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+
+run-name: Prepare ${{ github.event.inputs.version }} release
+
+permissions:
+  contents: write
+
+jobs:
+  prepare_release:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # SEE: https://yoshiori.hatenablog.com/entry/2021/12/08/220839
+          ref: main
+
+      - name: Setup git
+        run: |
+          git config --local user.name 'GitHub Actions'
+          git config --local user.email 'actions@github.com'
+
+      - name: Bump version
+        run: |
+          git checkout -b actions/main/release-${{ github.event.inputs.version }}
+          scripts/increment-version ${{ github.event.inputs.version }}
+          git push -u origin HEAD
+
+      - name: Create pull request and enqueue merge
+        # Requirements:
+        #   * Allow auto-merge
+        #     * https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request
+        #   * Allow GitHub Actions to create and approve pull requests
+        #      * https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests
+        #   * `repo` scoped PAT
+        #      * https://github.com/peter-evans/create-pull-request/issues/48
+        #      * https://stackoverflow.com/questions/52200096/github-pull-request-waiting-for-status-to-be-reported/69169858#69169858
+        run: |
+          PR_URL=$(gh pr create --base main --fill --label 'release:${{ github.event.inputs.version }}')
+          gh pr merge --auto --merge --delete-branch $PR_URL
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_SCOPED_TOKEN }}
