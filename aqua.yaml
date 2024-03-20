@@ -5,3 +5,8 @@ packages:
   - name: go-task/task@v3.35.1
   - name: jqlang/jq@jq-1.7.1
   - name: denoland/deno@v1.41.2
+  - name: dprint/dprint@0.45.0
+  - name: biomejs/biome@cli/v1.6.1
+  - name: google/yamlfmt@v0.11.0
+  - name: evilmartians/lefthook@v1.6.7
+  - name: mvdan/sh@v3.8.0

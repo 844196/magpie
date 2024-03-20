@@ -1,8 +1,9 @@
 import { Command, CompletionsCommand, type OpenAPIV3, SwaggerParser } from '../deps.mts'
 import { main } from './main.mts'
-import { type Dereferenced } from './types.mts'
+import type { Dereferenced } from './types.mts'
+
 import VERSION from '../version.json' with { type: 'json' }
-import BUILTIN_TEMPLATE from './template.json' with { type: 'json' }
+import BUILTIN_TEMPLATE from './template.generated.json' with { type: 'json' }
 
 await new Command()
   .name('magpie')

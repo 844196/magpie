@@ -1,0 +1,13 @@
+# cspell: disable
+pre-commit:
+  parallel: true
+  commands:
+    dprint:
+      glob: '*.{yaml,yml,sh,bash}'
+      run: task dprint:check -- {staged_files}
+    biome:
+      glob: '*.{mts,json}'
+      run: task biome:check -- {staged_files}
+    deno:
+      glob: '*.{mts}'
+      run: task deno:check -- {staged_files}

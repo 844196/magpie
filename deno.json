@@ -9,10 +9,5 @@
     "std/path": "https://deno.land/std@0.219.0/path/mod.ts",
     "std/semver": "https://deno.land/std@0.220.1/semver/mod.ts",
     "dax": "https://deno.land/x/dax@0.28.0/mod.ts"
-  },
-  "fmt": {
-    "semiColons": false,
-    "singleQuote": true,
-    "lineWidth": 120
   }
 }
