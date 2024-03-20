@@ -1,5 +1,4 @@
-import { type OpenAPIV3 } from 'openapi-types'
-import { match, P } from 'ts-pattern'
+import { match, type OpenAPIV3, P } from '../deps.mts'
 import { type Dereferenced, type FormRequestValidationDefinition, hasValidationRuleExtension } from './types.mts'
 
 function computeNecessary(opts: {

@@ -1,10 +1,7 @@
-import * as path from 'std/path'
-import { Eta } from 'eta'
-import { type OpenAPIV3 } from 'openapi-types'
-import { match, P } from 'ts-pattern'
-import { combineSchema } from './combineSchema.mts'
-import { computeDataShape } from './computeDataShape.mts'
-import { computeRule } from './computeRule.mts'
+import { Eta, match, type OpenAPIV3, P, pathJoin } from '../deps.mts'
+import { combineSchema } from './combine-schema.mts'
+import { computeDataShape } from './compute-data-shape.mts'
+import { computeRule } from './compute-rule.mts'
 import {
   type Dereferenced,
   hasAuthExtension,
@@ -93,7 +90,7 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
         rules,
         dataShape,
       })
-      waitings.push(Deno.writeTextFile(path.join(output, `${className}.php`), rendered))
+      waitings.push(Deno.writeTextFile(pathJoin(output, `${className}.php`), rendered))
     }
   }
   await Promise.all(waitings)

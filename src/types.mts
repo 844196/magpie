@@ -1,4 +1,4 @@
-import { type OpenAPIV3 } from 'openapi-types'
+import { type OpenAPIV3 } from '../deps.mts'
 
 export type PropertyAnnotation = {
   name: string

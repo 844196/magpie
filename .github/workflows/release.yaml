@@ -35,7 +35,7 @@ jobs:
         run: echo "version=$(jq --raw-output . version.json)" >> "$GITHUB_OUTPUT"
         id: released_version
 
-      - run: task build
+      - run: task init build
 
       - name: Release
         uses: softprops/action-gh-release@v1
