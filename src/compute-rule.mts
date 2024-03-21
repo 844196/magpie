@@ -1,4 +1,4 @@
-import { match, type OpenAPIV3, P } from '../deps.mts'
+import { type OpenAPIV3, P, match } from '../deps.mts'
 import { type Dereferenced, type FormRequestValidationDefinition, hasValidationRuleExtension } from './types.mts'
 
 function computeNecessary(opts: {
@@ -70,7 +70,7 @@ export function computeRule(
       computeRule(childSchema, {
         name: name.length > 0 ? `${name}.${childName}` : childName,
         required: required && (schema.required ?? []).includes(childName),
-      })
+      }),
     )
   }
 

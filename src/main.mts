@@ -1,13 +1,13 @@
-import { Eta, match, type OpenAPIV3, P, pathJoin } from '../deps.mts'
+import { Eta, type OpenAPIV3, P, match, pathJoin } from '../deps.mts'
 import { combineSchema } from './combine-schema.mts'
 import { computeDataShape } from './compute-data-shape.mts'
 import { computeRule } from './compute-rule.mts'
 import {
   type Dereferenced,
+  type PHPDocTag,
   hasAuthExtension,
   hasFormRequestNameExtension,
   hasRouteModelBindingExtension,
-  type PHPDocTag,
 } from './types.mts'
 
 const eta = new Eta()
@@ -24,24 +24,20 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
         continue
       }
 
-      let className
+      let className: string
       if (hasFormRequestNameExtension(operation)) {
         className = operation['x-magpie-laravel-form-request-name']
       } else if ('operationId' in operation && typeof operation.operationId === 'string') {
-        className = `${
-          operation.operationId
-            .replaceAll('-', '')
-            .replaceAll(' ', '')
-            .replace(/^[a-z]/, (c) => c.toUpperCase())
-        }Request`
+        className = `${operation.operationId
+          .replaceAll('-', '')
+          .replaceAll(' ', '')
+          .replace(/^[a-z]/, (c) => c.toUpperCase())}Request`
       } else {
-        className = `${method.replace(/^[a-z]/, (c) => c.toUpperCase())}${
-          apiPath
-            .split(/[-/_]/)
-            .filter((v) => v.length > 0)
-            .map((v) => v.replace(/^[a-z]/, (c) => c.toUpperCase()))
-            .join('')
-        }Request`
+        className = `${method.replace(/^[a-z]/, (c) => c.toUpperCase())}${apiPath
+          .split(/[-/_]/)
+          .filter((v) => v.length > 0)
+          .map((v) => v.replace(/^[a-z]/, (c) => c.toUpperCase()))
+          .join('')}Request`
       }
 
       const docSummary = `${method.toUpperCase()} ${apiPath} - ${operation.summary}`
@@ -54,7 +50,7 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
           'property-read',
           binding.model,
           `$${binding.key}`,
-          binding.description ?? param.description ?? param.schema!.description ?? '',
+          binding.description ?? param.description ?? param.schema?.description ?? '',
         ])
 
       const rootSchema = combineSchema(operation)
@@ -63,15 +59,13 @@ export async function main(output: string, namespace: string, doc: Dereferenced<
         ({ name, rule }) => {
           return {
             name,
-            rule: `[${
-              rule
-                .map((r) =>
-                  match(r)
-                    .with({ raw: P.string }, ({ raw }) => raw)
-                    .otherwise((v) => JSON.stringify(v))
-                )
-                .join(',')
-            }]`,
+            rule: `[${rule
+              .map((r) =>
+                match(r)
+                  .with({ raw: P.string }, ({ raw }) => raw)
+                  .otherwise((v) => JSON.stringify(v)),
+              )
+              .join(',')}]`,
           }
         },
       )

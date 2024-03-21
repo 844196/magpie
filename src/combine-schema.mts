@@ -1,4 +1,4 @@
-import { match, type OpenAPIV3, P } from '../deps.mts'
+import { type OpenAPIV3, P, match } from '../deps.mts'
 import { type Dereferenced, hasRouteModelBindingExtension } from './types.mts'
 
 export function combineSchema({
@@ -6,7 +6,12 @@ export function combineSchema({
   requestBody,
 }: Dereferenced<OpenAPIV3.OperationObject>): Dereferenced<OpenAPIV3.NonArraySchemaObject> {
   const root = match(requestBody)
-    .returnType<Dereferenced<OpenAPIV3.NonArraySchemaObject>>()
+    .returnType<
+      Dereferenced<OpenAPIV3.NonArraySchemaObject> & {
+        properties: Required<OpenAPIV3.BaseSchemaObject>['properties']
+        required: Required<OpenAPIV3.BaseSchemaObject>['required']
+      }
+    >()
     .with(
       {
         required: P.optional(P.select('bodyRequired')),
@@ -33,9 +38,13 @@ export function combineSchema({
       continue
     }
 
-    root.properties![parameter.name] = parameter.schema!
+    if (parameter.schema === undefined) {
+      continue
+    }
+
+    root.properties[parameter.name] = parameter.schema
     if (parameter.required) {
-      root.required!.push(parameter.name)
+      root.required.push(parameter.name)
     }
   }
 
