@@ -1,4 +1,4 @@
-import { type OpenAPIV3 } from 'openapi-types'
+import type { OpenAPIV3 } from '../deps.mts'
 
 export type PropertyAnnotation = {
   name: string
@@ -73,8 +73,11 @@ export function hasFormRequestNameExtension<T extends OpenAPIV3.OperationObject>
   return true
 }
 
-export type Dereferenced<T> = T extends OpenAPIV3.ReferenceObject ? Exclude<T, OpenAPIV3.ReferenceObject>
-  : T extends (infer U)[] ? Dereferenced<U>[]
-  // deno-lint-ignore ban-types
-  : T extends Function | Date | Error | RegExp ? T
-  : { [key in keyof T]: Dereferenced<T[key]> }
+export type Dereferenced<T> = T extends OpenAPIV3.ReferenceObject
+  ? Exclude<T, OpenAPIV3.ReferenceObject>
+  : T extends (infer U)[]
+    ? Dereferenced<U>[]
+    : // biome-ignore lint/complexity/noBannedTypes: <explanation>
+      T extends Function | Date | Error | RegExp
+      ? T
+      : { [key in keyof T]: Dereferenced<T[key]> }

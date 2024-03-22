@@ -1,18 +1,35 @@
 # spell-checker: disable
----
 version: '3'
 
 tasks:
-  lint:
+  init:
     cmds:
-      - deno fmt --check
-      - deno lint
+      - deno cache --reload --lock=deno.lock deps.mts dev_deps.mts
+      - lefthook install
+
+  dprint:check:
+    cmd: dprint check {{.CLI_ARGS}}
+
+  biome:check:
+    cmd: biome check {{.CLI_ARGS | default "."}}
+
+  deno:check:
+    deps:
+      - template
+    cmd: deno check --lock=deno.lock {{.CLI_ARGS | default "**/*.mts"}}
+
+  check:
+    cmds:
+      - task: dprint:check
+      - task: biome:check
+      - task: deno:check
 
   build:
+    deps:
+      - template
+      - clean
     cmds:
-      - task: clean
-      - cmd: jq --raw-input --slurp < src/template.eta > src/template.json
-      - cmd: deno compile --lock=deno.lock -A --target {{.ITEM}} --output .build/magpie-{{.ITEM}} src/cli.mts
+      - cmd: deno compile --cached-only -A --target {{.ITEM}} --output .build/magpie-{{.ITEM}} src/cli.mts
         for:
           - x86_64-unknown-linux-gnu
           - aarch64-unknown-linux-gnu
@@ -20,6 +37,19 @@ tasks:
           - aarch64-apple-darwin
           - x86_64-pc-windows-msvc
 
-  lock-write: deno cache --lock=deno.lock --lock-write src/cli.mts
+  cache:
+    sources:
+      - deps.mts
+      - dev_deps.mts
+    generates:
+      - deno.lock
+    cmd: deno cache --lock=deno.lock --lock-write deps.mts dev_deps.mts
 
   clean: rm -rf .build/*
+
+  template:
+    sources:
+      - src/template.eta
+    generates:
+      - src/template.generated.json
+    cmd: jq --raw-input --slurp < src/template.eta > src/template.generated.json

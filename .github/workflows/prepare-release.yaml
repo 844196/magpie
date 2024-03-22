@@ -40,7 +40,7 @@ jobs:
       - name: Bump version
         run: |
           git checkout -b actions/main/release-${{ github.event.inputs.version }}
-          scripts/increment-version ${{ github.event.inputs.version }}
+          scripts/increment-version.mts ${{ github.event.inputs.version }}
           git push -u origin HEAD
 
       - name: Create pull request and enqueue merge

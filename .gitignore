@@ -133,4 +133,5 @@ dist
 .pnp.*
 
 .build/
-src/template.json
+.task/
+*.generated.*

@@ -1,6 +1,5 @@
-import { type OpenAPIV3 } from 'openapi-types'
-import { match, P } from 'ts-pattern'
-import { type Dereferenced } from './types.mts'
+import { type OpenAPIV3, P, match } from '../deps.mts'
+import type { Dereferenced } from './types.mts'
 
 export function computeDataShape(
   schema: Dereferenced<OpenAPIV3.SchemaObject>,
@@ -8,6 +7,8 @@ export function computeDataShape(
 ): string {
   if (schema.type === 'array') {
     return (
+      // FIXME
+      // biome-ignore lint/style/useTemplate: <explanation>
       (name.length > 0 ? `${name}${nullable ? '?' : ''}:` : '') +
       computeDataShape(schema.items, { name: '', nullable }) +
       '[]'
@@ -16,13 +17,15 @@ export function computeDataShape(
 
   if (schema.type === 'object') {
     return (
+      // FIXME
+      // biome-ignore lint/style/useTemplate: <explanation>
       (name.length > 0 ? `${name}${nullable ? '?' : ''}:array{` : 'array{') +
       Object.entries(schema.properties ?? {})
         .map(([childName, childSchema]) =>
           computeDataShape(childSchema, {
             name: childName,
             nullable: (schema.required ?? []).includes(childName) === false,
-          })
+          }),
         )
         .join(',') +
       '}'
